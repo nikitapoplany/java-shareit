@@ -4,6 +4,9 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Класс для преобразования между Item и ItemDto.
  */
@@ -77,5 +80,17 @@ public class ItemMapper {
                 owner,
                 request
         );
+    }
+
+    /**
+     * Преобразует список Item в список ItemDto.
+     *
+     * @param items список объектов вещей
+     * @return список объектов DTO вещей
+     */
+    public static List<ItemDto> toItemDtoList(List<Item> items) {
+        return items.stream()
+                .map(ItemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 }

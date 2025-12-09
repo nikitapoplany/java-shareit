@@ -2,6 +2,9 @@ package ru.practicum.shareit.user.dto;
 
 import ru.practicum.shareit.user.User;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Класс для преобразования между User и UserDto.
  */
@@ -33,5 +36,17 @@ public class UserMapper {
                 userDto.getName(),
                 userDto.getEmail()
         );
+    }
+
+    /**
+     * Преобразует список User в список UserDto.
+     *
+     * @param users список объектов пользователей
+     * @return список объектов DTO пользователей
+     */
+    public static List<UserDto> toUserDtoList(List<User> users) {
+        return users.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
     }
 }

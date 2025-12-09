@@ -1,13 +1,13 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с пользователями.
@@ -29,9 +29,10 @@ public class UserController {
      * @return созданный пользователь
      */
     @PostMapping
-    public UserDto createUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
         User user = UserMapper.toUser(userDto);
-        return UserMapper.toUserDto(userService.createUser(user));
+        User createdUser = userService.createUser(user);
+        return ResponseEntity.ok(UserMapper.toUserDto(createdUser));
     }
 
     /**
@@ -42,9 +43,10 @@ public class UserController {
      * @return обновленный пользователь
      */
     @PatchMapping("/{userId}")
-    public UserDto updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
         User user = UserMapper.toUser(userDto);
-        return UserMapper.toUserDto(userService.updateUser(userId, user));
+        User updatedUser = userService.updateUser(userId, user);
+        return ResponseEntity.ok(UserMapper.toUserDto(updatedUser));
     }
 
     /**
@@ -54,8 +56,9 @@ public class UserController {
      * @return пользователь
      */
     @GetMapping("/{userId}")
-    public UserDto getUserById(@PathVariable Long userId) {
-        return UserMapper.toUserDto(userService.getUserById(userId));
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long userId) {
+        User user = userService.getUserById(userId);
+        return ResponseEntity.ok(UserMapper.toUserDto(user));
     }
 
     /**
@@ -64,10 +67,9 @@ public class UserController {
      * @return список пользователей
      */
     @GetMapping
-    public List<UserDto> getAllUsers() {
-        return userService.getAllUsers().stream()
-                .map(UserMapper::toUserDto)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(UserMapper.toUserDtoList(users));
     }
 
     /**
@@ -76,7 +78,8 @@ public class UserController {
      * @param userId идентификатор пользователя
      */
     @DeleteMapping("/{userId}")
-    public void deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
+        return ResponseEntity.ok().build();
     }
 }

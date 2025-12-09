@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -8,7 +9,6 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с вещами.
@@ -32,9 +32,10 @@ public class ItemController {
      * @return созданная вещь
      */
     @PostMapping
-    public ItemDto createItem(@RequestHeader(USER_ID_HEADER) Long userId, @RequestBody ItemDto itemDto) {
+    public ResponseEntity<ItemDto> createItem(@RequestHeader(USER_ID_HEADER) Long userId, @RequestBody ItemDto itemDto) {
         Item item = ItemMapper.toItem(itemDto);
-        return ItemMapper.toItemDto(itemService.createItem(userId, item));
+        Item createdItem = itemService.createItem(userId, item);
+        return ResponseEntity.ok(ItemMapper.toItemDto(createdItem));
     }
 
     /**
@@ -46,11 +47,12 @@ public class ItemController {
      * @return обновленная вещь
      */
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestHeader(USER_ID_HEADER) Long userId,
+    public ResponseEntity<ItemDto> updateItem(@RequestHeader(USER_ID_HEADER) Long userId,
                               @PathVariable Long itemId,
                               @RequestBody ItemDto itemDto) {
         Item item = ItemMapper.toItem(itemDto);
-        return ItemMapper.toItemDto(itemService.updateItem(userId, itemId, item));
+        Item updatedItem = itemService.updateItem(userId, itemId, item);
+        return ResponseEntity.ok(ItemMapper.toItemDto(updatedItem));
     }
 
     /**
@@ -60,8 +62,9 @@ public class ItemController {
      * @return вещь
      */
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
-        return ItemMapper.toItemDto(itemService.getItemById(itemId));
+    public ResponseEntity<ItemDto> getItemById(@PathVariable Long itemId) {
+        Item item = itemService.getItemById(itemId);
+        return ResponseEntity.ok(ItemMapper.toItemDto(item));
     }
 
     /**
@@ -71,10 +74,9 @@ public class ItemController {
      * @return список вещей
      */
     @GetMapping
-    public List<ItemDto> getUserItems(@RequestHeader(USER_ID_HEADER) Long userId) {
-        return itemService.getUserItems(userId).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<ItemDto>> getUserItems(@RequestHeader(USER_ID_HEADER) Long userId) {
+        List<Item> items = itemService.getUserItems(userId);
+        return ResponseEntity.ok(ItemMapper.toItemDtoList(items));
     }
 
     /**
@@ -84,9 +86,8 @@ public class ItemController {
      * @return список найденных вещей
      */
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam String text) {
-        return itemService.searchItems(text).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+    public ResponseEntity<List<ItemDto>> searchItems(@RequestParam String text) {
+        List<Item> items = itemService.searchItems(text);
+        return ResponseEntity.ok(ItemMapper.toItemDtoList(items));
     }
 }
