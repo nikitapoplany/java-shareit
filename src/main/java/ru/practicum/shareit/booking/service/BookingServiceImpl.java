@@ -48,6 +48,9 @@ public class BookingServiceImpl implements BookingService {
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец вещи не может бронировать свою вещь");
         }
+        
+        // Установка полной информации о вещи
+        booking.setItem(item);
 
         // Проверка корректности дат бронирования
         validateBookingDates(booking);
@@ -68,7 +71,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверка, что пользователь является владельцем вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Пользователь с ID " + userId + " не является владельцем вещи");
+            throw new ValidationException("Пользователь с ID " + userId + " не является владельцем вещи");
         }
 
         // Проверка, что бронирование в статусе WAITING

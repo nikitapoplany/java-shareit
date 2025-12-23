@@ -3,12 +3,17 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.Booking.BookingStatus;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentMapper;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
@@ -152,5 +157,38 @@ public class ItemServiceImpl implements ItemService {
         return commentRepository.findByItemOrderByCreatedDesc(item).stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
+    }
+    
+    @Override
+    public ItemDto getItemWithBookingsAndComments(Long itemId, Long userId) {
+        // Проверка существования вещи
+        Item item = getItemById(itemId);
+        
+        // Создаем DTO вещи
+        ItemDto itemDto = ItemMapper.toItemDto(item);
+        
+        // Получаем комментарии к вещи
+        List<CommentDto> comments = getItemComments(itemId);
+        itemDto.setComments(comments);
+        
+        // Если пользователь не является владельцем вещи, не добавляем информацию о бронированиях
+        if (!item.getOwner().getId().equals(userId)) {
+            return itemDto;
+        }
+        
+        // Получаем последнее завершенное бронирование
+        LocalDateTime now = LocalDateTime.now();
+        Booking lastBooking = bookingRepository.findFirstByItemAndEndBeforeOrderByEndDesc(item, now);
+        if (lastBooking != null) {
+            itemDto.setLastBooking(BookingMapper.toBookingDtoShort(lastBooking));
+        }
+        
+        // Получаем ближайшее будущее бронирование
+        Booking nextBooking = bookingRepository.findFirstByItemAndStartAfterOrderByStartAsc(item, now);
+        if (nextBooking != null) {
+            itemDto.setNextBooking(BookingMapper.toBookingDtoShort(nextBooking));
+        }
+        
+        return itemDto;
     }
 }

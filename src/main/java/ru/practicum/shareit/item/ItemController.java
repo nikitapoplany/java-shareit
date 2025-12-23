@@ -59,13 +59,14 @@ public class ItemController {
     /**
      * Получает вещь по идентификатору.
      *
+     * @param userId идентификатор пользователя, запрашивающего информацию
      * @param itemId идентификатор вещи
-     * @return вещь
+     * @return вещь с информацией о бронированиях и комментариях
      */
     @GetMapping("/{itemId}")
-    public ResponseEntity<ItemDto> getItemById(@PathVariable Long itemId) {
-        Item item = itemService.getItemById(itemId);
-        return ResponseEntity.ok(ItemMapper.toItemDto(item));
+    public ResponseEntity<ItemDto> getItemById(@RequestHeader(USER_ID_HEADER) Long userId, 
+                                              @PathVariable Long itemId) {
+        return ResponseEntity.ok(itemService.getItemWithBookingsAndComments(itemId, userId));
     }
 
     /**

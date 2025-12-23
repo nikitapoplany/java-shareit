@@ -181,10 +181,12 @@ class ItemControllerTest {
     @Test
     void getItemById_WithExistingId_ShouldReturnItem() throws Exception {
         // Подготовка
-        when(itemService.getItemById(anyLong())).thenReturn(item);
+        ItemDto itemDto = new ItemDto(1L, "Дрель", "Электрическая дрель", true, 1L, null);
+        when(itemService.getItemWithBookingsAndComments(anyLong(), anyLong())).thenReturn(itemDto);
 
         // Действие и проверка
-        mockMvc.perform(get("/items/1"))
+        mockMvc.perform(get("/items/1")
+                        .header(USER_ID_HEADER, 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.name", is("Дрель")))
@@ -200,11 +202,12 @@ class ItemControllerTest {
     @Test
     void getItemById_WithNonExistentId_ShouldReturnNotFound() throws Exception {
         // Подготовка
-        when(itemService.getItemById(anyLong()))
+        when(itemService.getItemWithBookingsAndComments(anyLong(), anyLong()))
                 .thenThrow(new NotFoundException("Вещь с ID 999 не найдена"));
 
         // Действие и проверка
-        mockMvc.perform(get("/items/999"))
+        mockMvc.perform(get("/items/999")
+                        .header(USER_ID_HEADER, 1L))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", is("Вещь с ID 999 не найдена")));
     }
