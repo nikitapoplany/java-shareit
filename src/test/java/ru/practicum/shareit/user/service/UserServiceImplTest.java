@@ -2,26 +2,37 @@ package ru.practicum.shareit.user.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 /**
  * Тесты для {@link UserServiceImpl}
  */
+@ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
-    private UserService userService;
+    @Mock
+    private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() {
-        userService = new UserServiceImpl();
-    }
+    @InjectMocks
+    private UserServiceImpl userService;
 
     /**
      * Тест на создание пользователя с корректными данными.
@@ -31,6 +42,9 @@ class UserServiceImplTest {
     void createUser_WithValidData_ShouldCreateUser() {
         // Подготовка
         User user = new User(null, "Иван Иванов", "ivan@example.com");
+        User savedUser = new User(1L, "Иван Иванов", "ivan@example.com");
+        
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         // Действие
         User createdUser = userService.createUser(user);

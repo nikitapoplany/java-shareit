@@ -3,6 +3,7 @@ package ru.practicum.shareit.item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -89,5 +90,20 @@ public class ItemController {
     public ResponseEntity<List<ItemDto>> searchItems(@RequestParam String text) {
         List<Item> items = itemService.searchItems(text);
         return ResponseEntity.ok(ItemMapper.toItemDtoList(items));
+    }
+    
+    /**
+     * Создает комментарий к вещи.
+     *
+     * @param userId     идентификатор пользователя, оставляющего комментарий
+     * @param itemId     идентификатор вещи
+     * @param commentDto данные комментария
+     * @return созданный комментарий
+     */
+    @PostMapping("/{itemId}/comment")
+    public ResponseEntity<CommentDto> createComment(@RequestHeader(USER_ID_HEADER) Long userId,
+                                                  @PathVariable Long itemId,
+                                                  @RequestBody CommentDto commentDto) {
+        return ResponseEntity.ok(itemService.createComment(userId, itemId, commentDto));
     }
 }

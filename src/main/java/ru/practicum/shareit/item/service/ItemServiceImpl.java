@@ -1,34 +1,40 @@
 package ru.practicum.shareit.item.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.Booking.BookingStatus;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Реализация сервиса для работы с вещами.
  */
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
-    private final Map<Long, Item> items = new HashMap<>();
+    private final ItemRepository itemRepository;
     private final UserService userService;
-    private Long nextId = 1L;
-
-    @Autowired
-    public ItemServiceImpl(UserService userService) {
-        this.userService = userService;
-    }
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Override
+    @Transactional
     public Item createItem(Long userId, Item item) {
         // Проверка существования пользователя
         User owner = userService.getUserById(userId);
@@ -39,11 +45,8 @@ public class ItemServiceImpl implements ItemService {
         // Установка владельца
         item.setOwner(owner);
 
-        // Установка ID и сохранение
-        item.setId(nextId++);
-        items.put(item.getId(), item);
-
-        return item;
+        // Сохранение
+        return itemRepository.save(item);
     }
 
     /**
@@ -66,6 +69,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public Item updateItem(Long userId, Long itemId, Item item) {
         // Проверка существования вещи
         Item existingItem = getItemById(itemId);
@@ -86,26 +90,21 @@ public class ItemServiceImpl implements ItemService {
             existingItem.setAvailable(item.getAvailable());
         }
 
-        return existingItem;
+        return itemRepository.save(existingItem);
     }
 
     @Override
     public Item getItemById(Long itemId) {
-        Item item = items.get(itemId);
-        if (item == null) {
-            throw new NotFoundException("Вещь с ID " + itemId + " не найдена");
-        }
-        return item;
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
     }
 
     @Override
     public List<Item> getUserItems(Long userId) {
         // Проверка существования пользователя
-        userService.getUserById(userId);
+        User owner = userService.getUserById(userId);
 
-        return items.values().stream()
-                .filter(item -> item.getOwner().getId().equals(userId))
-                .collect(Collectors.toList());
+        return itemRepository.findByOwnerOrderById(owner);
     }
 
     @Override
@@ -114,12 +113,44 @@ public class ItemServiceImpl implements ItemService {
             return new ArrayList<>();
         }
 
-        String searchText = text.toLowerCase();
-        return items.values().stream()
-                .filter(Item::getAvailable) // Только доступные вещи
-                .filter(item ->
-                        item.getName().toLowerCase().contains(searchText) ||
-                        item.getDescription().toLowerCase().contains(searchText))
+        return itemRepository.search(text);
+    }
+    
+    @Override
+    @Transactional
+    public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
+        // Проверка существования пользователя
+        User author = userService.getUserById(userId);
+        
+        // Проверка существования вещи
+        Item item = getItemById(itemId);
+        
+        // Проверка, что пользователь брал вещь в аренду и аренда завершена
+        LocalDateTime now = LocalDateTime.now();
+        boolean hasBooking = bookingRepository.existsByItemAndBookerAndEndBeforeAndStatus(
+                item, author, now, BookingStatus.APPROVED);
+        
+        if (!hasBooking) {
+            throw new ValidationException("Пользователь с ID " + userId + 
+                    " не может оставить комментарий к вещи с ID " + itemId + 
+                    ", так как не брал её в аренду или аренда не завершена");
+        }
+        
+        // Создание и сохранение комментария
+        Comment comment = CommentMapper.toComment(commentDto, item, author);
+        comment.setCreated(now);
+        
+        Comment savedComment = commentRepository.save(comment);
+        return CommentMapper.toCommentDto(savedComment);
+    }
+    
+    @Override
+    public List<CommentDto> getItemComments(Long itemId) {
+        // Проверка существования вещи
+        Item item = getItemById(itemId);
+        
+        return commentRepository.findByItemOrderByCreatedDesc(item).stream()
+                .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
 }
