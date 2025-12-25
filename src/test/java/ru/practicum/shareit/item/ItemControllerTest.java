@@ -10,14 +10,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.User;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static org.mockito.ArgumentMatchers.eq;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -290,5 +294,77 @@ class ItemControllerTest {
                         .param("text", ""))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
+    }
+    
+    /**
+     * Тест на создание комментария с корректными данными.
+     * Проверяет, что эндпоинт возвращает статус 200 и созданный комментарий.
+     */
+    @Test
+    void createComment_WithValidData_ShouldReturnCreatedComment() throws Exception {
+        // Подготовка
+        Long userId = 1L;
+        Long itemId = 1L;
+        CommentDto commentDto = new CommentDto(null, "Отличная дрель, спасибо!", null, null);
+        CommentDto createdCommentDto = new CommentDto(1L, "Отличная дрель, спасибо!", "Иван Иванов", LocalDateTime.now());
+        
+        when(itemService.createComment(eq(userId), eq(itemId), any(CommentDto.class))).thenReturn(createdCommentDto);
+
+        // Действие и проверка
+        mockMvc.perform(post("/items/{itemId}/comment", itemId)
+                        .header(USER_ID_HEADER, userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.text", is("Отличная дрель, спасибо!")))
+                .andExpect(jsonPath("$.authorName", is("Иван Иванов")))
+                .andExpect(jsonPath("$.created").exists());
+    }
+    
+    /**
+     * Тест на создание комментария с пустым текстом.
+     * Проверяет, что эндпоинт возвращает статус 400 и сообщение об ошибке.
+     */
+    @Test
+    void createComment_WithEmptyText_ShouldReturnBadRequest() throws Exception {
+        // Подготовка
+        Long userId = 1L;
+        Long itemId = 1L;
+        CommentDto commentDto = new CommentDto(null, "", null, null);
+        
+        when(itemService.createComment(eq(userId), eq(itemId), any(CommentDto.class)))
+                .thenThrow(new ValidationException("Текст комментария не может быть пустым"));
+
+        // Действие и проверка
+        mockMvc.perform(post("/items/{itemId}/comment", itemId)
+                        .header(USER_ID_HEADER, userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("Текст комментария не может быть пустым")));
+    }
+    
+    /**
+     * Тест на создание комментария пользователем, который не бронировал вещь.
+     * Проверяет, что эндпоинт возвращает статус 400 и сообщение об ошибке.
+     */
+    @Test
+    void createComment_ByUserWhoHasNotBookedItem_ShouldReturnBadRequest() throws Exception {
+        // Подготовка
+        Long userId = 2L;
+        Long itemId = 1L;
+        CommentDto commentDto = new CommentDto(null, "Отличная дрель, спасибо!", null, null);
+        
+        when(itemService.createComment(eq(userId), eq(itemId), any(CommentDto.class)))
+                .thenThrow(new ValidationException("Пользователь с ID 2 не бронировал вещь с ID 1"));
+
+        // Действие и проверка
+        mockMvc.perform(post("/items/{itemId}/comment", itemId)
+                        .header(USER_ID_HEADER, userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(commentDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("Пользователь с ID 2 не бронировал вещь с ID 1")));
     }
 }
