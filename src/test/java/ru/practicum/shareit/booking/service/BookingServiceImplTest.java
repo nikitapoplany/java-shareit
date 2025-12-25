@@ -70,7 +70,7 @@ class BookingServiceImplTest {
     void createBooking_WithValidData_ShouldCreateBooking() {
         // Подготовка
         Booking inputBooking = new Booking(null, start, end, item, null, null);
-        
+
         when(userService.getUserById(user.getId())).thenReturn(user);
         when(itemService.getItemById(item.getId())).thenReturn(item);
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
@@ -93,15 +93,15 @@ class BookingServiceImplTest {
         // Подготовка
         Item unavailableItem = new Item(1L, "Item", "Description", false, owner, null);
         Booking inputBooking = new Booking(null, start, end, unavailableItem, null, null);
-        
+
         when(userService.getUserById(user.getId())).thenReturn(user);
         when(itemService.getItemById(unavailableItem.getId())).thenReturn(unavailableItem);
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.createBooking(user.getId(), inputBooking)
         );
-        
+
         assertTrue(exception.getMessage().contains("недоступна для бронирования"));
     }
 
@@ -109,15 +109,15 @@ class BookingServiceImplTest {
     void createBooking_ByOwner_ShouldThrowNotFoundException() {
         // Подготовка
         Booking inputBooking = new Booking(null, start, end, item, null, null);
-        
+
         when(userService.getUserById(owner.getId())).thenReturn(owner);
         when(itemService.getItemById(item.getId())).thenReturn(item);
 
         // Действие и проверка
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> 
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
             bookingService.createBooking(owner.getId(), inputBooking)
         );
-        
+
         assertTrue(exception.getMessage().contains("Владелец вещи не может бронировать свою вещь"));
     }
 
@@ -126,15 +126,15 @@ class BookingServiceImplTest {
         // Подготовка
         LocalDateTime pastStart = now.minusDays(1);
         Booking inputBooking = new Booking(null, pastStart, end, item, null, null);
-        
+
         when(userService.getUserById(user.getId())).thenReturn(user);
         when(itemService.getItemById(item.getId())).thenReturn(item);
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.createBooking(user.getId(), inputBooking)
         );
-        
+
         assertTrue(exception.getMessage().contains("Дата начала бронирования не может быть в прошлом"));
     }
 
@@ -143,15 +143,15 @@ class BookingServiceImplTest {
         // Подготовка
         LocalDateTime earlierEnd = start.minusDays(1);
         Booking inputBooking = new Booking(null, start, earlierEnd, item, null, null);
-        
+
         when(userService.getUserById(user.getId())).thenReturn(user);
         when(itemService.getItemById(item.getId())).thenReturn(item);
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.createBooking(user.getId(), inputBooking)
         );
-        
+
         assertTrue(exception.getMessage().contains("Дата окончания бронирования не может быть раньше даты начала"));
     }
 
@@ -159,16 +159,16 @@ class BookingServiceImplTest {
     void approveBooking_WithValidData_ShouldApproveBooking() {
         // Подготовка
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-        
+
         Booking approvedBooking = new Booking(
-            booking.getId(), 
-            booking.getStart(), 
-            booking.getEnd(), 
-            booking.getItem(), 
-            booking.getBooker(), 
+            booking.getId(),
+            booking.getStart(),
+            booking.getEnd(),
+            booking.getItem(),
+            booking.getBooker(),
             BookingStatus.APPROVED
         );
-        
+
         when(bookingRepository.save(any(Booking.class))).thenReturn(approvedBooking);
 
         // Действие
@@ -185,10 +185,10 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // Действие и проверка
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> 
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
             bookingService.approveBooking(owner.getId(), 999L, true)
         );
-        
+
         assertTrue(exception.getMessage().contains("Бронирование с ID 999 не найдено"));
     }
 
@@ -198,10 +198,10 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.approveBooking(user.getId(), booking.getId(), true)
         );
-        
+
         assertTrue(exception.getMessage().contains("не является владельцем вещи"));
     }
 
@@ -209,21 +209,21 @@ class BookingServiceImplTest {
     void approveBooking_AlreadyApproved_ShouldThrowValidationException() {
         // Подготовка
         Booking approvedBooking = new Booking(
-            booking.getId(), 
-            booking.getStart(), 
-            booking.getEnd(), 
-            booking.getItem(), 
-            booking.getBooker(), 
+            booking.getId(),
+            booking.getStart(),
+            booking.getEnd(),
+            booking.getItem(),
+            booking.getBooker(),
             BookingStatus.APPROVED
         );
-        
+
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(approvedBooking));
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.approveBooking(owner.getId(), booking.getId(), true)
         );
-        
+
         assertTrue(exception.getMessage().contains("Бронирование уже подтверждено или отклонено"));
     }
 
@@ -246,10 +246,10 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // Действие и проверка
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> 
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
             bookingService.getBookingById(user.getId(), 999L)
         );
-        
+
         assertTrue(exception.getMessage().contains("Бронирование с ID 999 не найдено"));
     }
 
@@ -260,10 +260,10 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
 
         // Действие и проверка
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> 
+        NotFoundException exception = assertThrows(NotFoundException.class, () ->
             bookingService.getBookingById(anotherUser.getId(), booking.getId())
         );
-        
+
         assertTrue(exception.getMessage().contains("не имеет доступа к бронированию"));
     }
 
@@ -355,14 +355,14 @@ class BookingServiceImplTest {
     void getUserBookings_WithStateRejected_ShouldReturnRejectedBookings() {
         // Подготовка
         Booking rejectedBooking = new Booking(
-            booking.getId(), 
-            booking.getStart(), 
-            booking.getEnd(), 
-            booking.getItem(), 
-            booking.getBooker(), 
+            booking.getId(),
+            booking.getStart(),
+            booking.getEnd(),
+            booking.getItem(),
+            booking.getBooker(),
             BookingStatus.REJECTED
         );
-        
+
         List<Booking> bookings = Arrays.asList(rejectedBooking);
         when(userService.getUserById(user.getId())).thenReturn(user);
         when(bookingRepository.findByBookerAndStatus(eq(user), eq(BookingStatus.REJECTED), any(Sort.class)))
@@ -384,10 +384,10 @@ class BookingServiceImplTest {
         when(userService.getUserById(user.getId())).thenReturn(user);
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.getUserBookings(user.getId(), "INVALID")
         );
-        
+
         assertTrue(exception.getMessage().contains("Неизвестное состояние: INVALID"));
     }
 
@@ -430,10 +430,10 @@ class BookingServiceImplTest {
         when(userService.getUserById(owner.getId())).thenReturn(owner);
 
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             bookingService.getOwnerBookings(owner.getId(), "INVALID")
         );
-        
+
         assertTrue(exception.getMessage().contains("Неизвестное состояние: INVALID"));
     }
 }

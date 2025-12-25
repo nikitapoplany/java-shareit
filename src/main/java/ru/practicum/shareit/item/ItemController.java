@@ -64,7 +64,7 @@ public class ItemController {
      * @return вещь с информацией о бронированиях и комментариях
      */
     @GetMapping("/{itemId}")
-    public ResponseEntity<ItemDto> getItemById(@RequestHeader(USER_ID_HEADER) Long userId, 
+    public ResponseEntity<ItemDto> getItemById(@RequestHeader(USER_ID_HEADER) Long userId,
                                               @PathVariable Long itemId) {
         return ResponseEntity.ok(itemService.getItemWithBookingsAndComments(itemId, userId));
     }
@@ -92,7 +92,7 @@ public class ItemController {
         List<Item> items = itemService.searchItems(text);
         return ResponseEntity.ok(ItemMapper.toItemDtoList(items));
     }
-    
+
     /**
      * Создает комментарий к вещи.
      *

@@ -63,23 +63,23 @@ class BookingControllerTest {
         user = new User(1L, "User", "user@example.com");
         owner = new User(2L, "Owner", "owner@example.com");
         item = new Item(1L, "Item", "Description", true, owner, null);
-        
+
         LocalDateTime start = LocalDateTime.now().plusDays(1);
         LocalDateTime end = LocalDateTime.now().plusDays(2);
-        
+
         booking = new Booking(1L, start, end, item, user, Booking.BookingStatus.WAITING);
-        
+
         bookingDto = new BookingDto(null, start, end, item.getId());
-        
+
         UserDto userDto = new UserDto(user.getId(), user.getName(), user.getEmail());
         ItemDto itemDto = new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), owner.getId(), null);
-        
+
         bookingResponseDto = new BookingResponseDto(
-                booking.getId(), 
-                booking.getStart(), 
-                booking.getEnd(), 
-                booking.getStatus(), 
-                userDto, 
+                booking.getId(),
+                booking.getStart(),
+                booking.getEnd(),
+                booking.getStatus(),
+                userDto,
                 itemDto
         );
     }
@@ -128,7 +128,7 @@ class BookingControllerTest {
                 booking.getBooker(),
                 Booking.BookingStatus.APPROVED
         );
-        
+
         when(bookingService.approveBooking(eq(owner.getId()), eq(booking.getId()), eq(true)))
                 .thenReturn(approvedBooking);
 

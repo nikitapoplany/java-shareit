@@ -21,7 +21,7 @@ public class ItemDto {
     private BookingDto lastBooking;
     private BookingDto nextBooking;
     private List<CommentDto> comments;
-    
+
     public ItemDto(Long id, String name, String description, Boolean available, Long ownerId, Long requestId) {
         this.id = id;
         this.name = name;

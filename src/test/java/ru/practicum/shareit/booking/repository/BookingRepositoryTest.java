@@ -47,14 +47,14 @@ class BookingRepositoryTest {
     @BeforeEach
     void setUp() {
         now = LocalDateTime.now();
-        
+
         // Создаем пользователей
         owner = userRepository.save(new User(null, "Owner", "owner@example.com"));
         booker = userRepository.save(new User(null, "Booker", "booker@example.com"));
-        
+
         // Создаем вещь
         item = itemRepository.save(new Item(null, "Item", "Description", true, owner, null));
-        
+
         // Создаем бронирования с разными статусами и датами
         pastBooking = bookingRepository.save(new Booking(
                 null,
@@ -64,7 +64,7 @@ class BookingRepositoryTest {
                 booker,
                 BookingStatus.APPROVED
         ));
-        
+
         currentBooking = bookingRepository.save(new Booking(
                 null,
                 now.minusDays(1),
@@ -73,7 +73,7 @@ class BookingRepositoryTest {
                 booker,
                 BookingStatus.APPROVED
         ));
-        
+
         futureBooking = bookingRepository.save(new Booking(
                 null,
                 now.plusDays(1),
@@ -82,7 +82,7 @@ class BookingRepositoryTest {
                 booker,
                 BookingStatus.APPROVED
         ));
-        
+
         waitingBooking = bookingRepository.save(new Booking(
                 null,
                 now.plusDays(3),
@@ -91,7 +91,7 @@ class BookingRepositoryTest {
                 booker,
                 BookingStatus.WAITING
         ));
-        
+
         rejectedBooking = bookingRepository.save(new Booking(
                 null,
                 now.plusDays(5),
@@ -106,7 +106,7 @@ class BookingRepositoryTest {
     void findByBooker_ShouldReturnAllBookerBookings() {
         // Действие
         List<Booking> bookings = bookingRepository.findByBooker(booker, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(5, bookings.size());
         assertTrue(bookings.contains(pastBooking));
@@ -121,7 +121,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findByBookerAndStartBeforeAndEndAfter(
                 booker, now, now, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, bookings.size());
         assertEquals(currentBooking.getId(), bookings.get(0).getId());
@@ -132,7 +132,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findByBookerAndEndBefore(
                 booker, now, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, bookings.size());
         assertEquals(pastBooking.getId(), bookings.get(0).getId());
@@ -143,7 +143,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findByBookerAndStartAfter(
                 booker, now, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(3, bookings.size());
         assertTrue(bookings.contains(futureBooking));
@@ -156,15 +156,15 @@ class BookingRepositoryTest {
         // Действие - WAITING
         List<Booking> waitingBookings = bookingRepository.findByBookerAndStatus(
                 booker, BookingStatus.WAITING, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, waitingBookings.size());
         assertEquals(waitingBooking.getId(), waitingBookings.get(0).getId());
-        
+
         // Действие - REJECTED
         List<Booking> rejectedBookings = bookingRepository.findByBookerAndStatus(
                 booker, BookingStatus.REJECTED, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, rejectedBookings.size());
         assertEquals(rejectedBooking.getId(), rejectedBookings.get(0).getId());
@@ -175,7 +175,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findByItemOwner(
                 owner, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(5, bookings.size());
         assertTrue(bookings.contains(pastBooking));
@@ -190,7 +190,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findCurrentByItemOwner(
                 owner, now, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, bookings.size());
         assertEquals(currentBooking.getId(), bookings.get(0).getId());
@@ -201,7 +201,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findPastByItemOwner(
                 owner, now, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, bookings.size());
         assertEquals(pastBooking.getId(), bookings.get(0).getId());
@@ -212,7 +212,7 @@ class BookingRepositoryTest {
         // Действие
         List<Booking> bookings = bookingRepository.findFutureByItemOwner(
                 owner, now, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(3, bookings.size());
         assertTrue(bookings.contains(futureBooking));
@@ -225,15 +225,15 @@ class BookingRepositoryTest {
         // Действие - WAITING
         List<Booking> waitingBookings = bookingRepository.findByItemOwnerAndStatus(
                 owner, BookingStatus.WAITING, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, waitingBookings.size());
         assertEquals(waitingBooking.getId(), waitingBookings.get(0).getId());
-        
+
         // Действие - REJECTED
         List<Booking> rejectedBookings = bookingRepository.findByItemOwnerAndStatus(
                 owner, BookingStatus.REJECTED, Sort.by(Sort.Direction.DESC, "start"));
-        
+
         // Проверка
         assertEquals(1, rejectedBookings.size());
         assertEquals(rejectedBooking.getId(), rejectedBookings.get(0).getId());
@@ -243,7 +243,7 @@ class BookingRepositoryTest {
     void findFirstByItemAndEndBeforeOrderByEndDesc_ShouldReturnLastCompletedBooking() {
         // Действие
         Booking lastBooking = bookingRepository.findFirstByItemAndEndBeforeOrderByEndDesc(item, now);
-        
+
         // Проверка
         assertNotNull(lastBooking);
         assertEquals(pastBooking.getId(), lastBooking.getId());
@@ -253,7 +253,7 @@ class BookingRepositoryTest {
     void findFirstByItemAndStartAfterOrderByStartAsc_ShouldReturnNextBooking() {
         // Действие
         Booking nextBooking = bookingRepository.findFirstByItemAndStartAfterOrderByStartAsc(item, now);
-        
+
         // Проверка
         assertNotNull(nextBooking);
         assertEquals(futureBooking.getId(), nextBooking.getId());
@@ -264,15 +264,15 @@ class BookingRepositoryTest {
         // Действие - существующее завершенное бронирование
         boolean exists = bookingRepository.existsByItemAndBookerAndEndBeforeAndStatus(
                 item, booker, now, BookingStatus.APPROVED);
-        
+
         // Проверка
         assertTrue(exists);
-        
+
         // Действие - несуществующее бронирование (другой пользователь)
         User anotherUser = userRepository.save(new User(null, "Another", "another@example.com"));
         boolean notExists = bookingRepository.existsByItemAndBookerAndEndBeforeAndStatus(
                 item, anotherUser, now, BookingStatus.APPROVED);
-        
+
         // Проверка
         assertFalse(notExists);
     }

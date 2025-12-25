@@ -53,7 +53,7 @@ public interface ItemService {
      * @return список найденных вещей
      */
     List<Item> searchItems(String text);
-    
+
     /**
      * Создает комментарий к вещи.
      *
@@ -63,7 +63,7 @@ public interface ItemService {
      * @return созданный комментарий
      */
     CommentDto createComment(Long userId, Long itemId, CommentDto commentDto);
-    
+
     /**
      * Получает комментарии к вещи.
      *
@@ -71,7 +71,7 @@ public interface ItemService {
      * @return список комментариев
      */
     List<CommentDto> getItemComments(Long itemId);
-    
+
     /**
      * Получает вещь по идентификатору с информацией о бронированиях и комментариях.
      *

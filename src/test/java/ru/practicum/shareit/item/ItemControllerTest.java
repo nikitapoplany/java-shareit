@@ -295,7 +295,7 @@ class ItemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
-    
+
     /**
      * Тест на создание комментария с корректными данными.
      * Проверяет, что эндпоинт возвращает статус 200 и созданный комментарий.
@@ -307,7 +307,7 @@ class ItemControllerTest {
         Long itemId = 1L;
         CommentDto commentDto = new CommentDto(null, "Отличная дрель, спасибо!", null, null);
         CommentDto createdCommentDto = new CommentDto(1L, "Отличная дрель, спасибо!", "Иван Иванов", LocalDateTime.now());
-        
+
         when(itemService.createComment(eq(userId), eq(itemId), any(CommentDto.class))).thenReturn(createdCommentDto);
 
         // Действие и проверка
@@ -321,7 +321,7 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.authorName", is("Иван Иванов")))
                 .andExpect(jsonPath("$.created").exists());
     }
-    
+
     /**
      * Тест на создание комментария с пустым текстом.
      * Проверяет, что эндпоинт возвращает статус 400 и сообщение об ошибке.
@@ -332,7 +332,7 @@ class ItemControllerTest {
         Long userId = 1L;
         Long itemId = 1L;
         CommentDto commentDto = new CommentDto(null, "", null, null);
-        
+
         when(itemService.createComment(eq(userId), eq(itemId), any(CommentDto.class)))
                 .thenThrow(new ValidationException("Текст комментария не может быть пустым"));
 
@@ -344,7 +344,7 @@ class ItemControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", is("Текст комментария не может быть пустым")));
     }
-    
+
     /**
      * Тест на создание комментария пользователем, который не бронировал вещь.
      * Проверяет, что эндпоинт возвращает статус 400 и сообщение об ошибке.
@@ -355,7 +355,7 @@ class ItemControllerTest {
         Long userId = 2L;
         Long itemId = 1L;
         CommentDto commentDto = new CommentDto(null, "Отличная дрель, спасибо!", null, null);
-        
+
         when(itemService.createComment(eq(userId), eq(itemId), any(CommentDto.class)))
                 .thenThrow(new ValidationException("Пользователь с ID 2 не бронировал вещь с ID 1"));
 

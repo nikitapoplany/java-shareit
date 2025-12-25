@@ -37,13 +37,13 @@ class ItemServiceImplTest {
 
     @Mock
     private UserService userService;
-    
+
     @Mock
     private ItemRepository itemRepository;
-    
+
     @Mock
     private BookingRepository bookingRepository;
-    
+
     @Mock
     private CommentRepository commentRepository;
 
@@ -174,13 +174,13 @@ class ItemServiceImplTest {
         // Подготовка
         Item existingItem = new Item(1L, "Дрель", "Электрическая дрель", true, owner, null);
         Item updatedItemData = new Item(null, "Перфоратор", "Мощный перфоратор", false, null, null);
-        
+
         // Создаем обновленную версию вещи для возврата из mock
         Item updatedItem = new Item(1L, "Перфоратор", "Мощный перфоратор", false, owner, null);
 
         // Мокируем поиск вещи по ID
         when(itemRepository.findById(existingItem.getId())).thenReturn(java.util.Optional.of(existingItem));
-        
+
         // Мокируем сохранение обновленной вещи
         when(itemRepository.save(any(Item.class))).thenReturn(updatedItem);
 
@@ -203,7 +203,7 @@ class ItemServiceImplTest {
     void updateItem_WithPartialData_ShouldUpdateOnlyProvidedFields() {
         // Подготовка
         Item existingItem = new Item(1L, "Дрель", "Электрическая дрель", true, owner, null);
-        
+
         // Создаем обновленные версии вещи для каждого этапа обновления
         Item afterNameUpdate = new Item(1L, "Перфоратор", "Электрическая дрель", true, owner, null);
         Item afterDescriptionUpdate = new Item(1L, "Перфоратор", "Мощный перфоратор", true, owner, null);
@@ -211,7 +211,7 @@ class ItemServiceImplTest {
 
         // Мокируем поиск вещи по ID
         when(itemRepository.findById(existingItem.getId())).thenReturn(java.util.Optional.of(existingItem));
-        
+
         // Мокируем сохранение для всех случаев
         when(itemRepository.save(any(Item.class))).thenReturn(afterNameUpdate, afterDescriptionUpdate, afterAvailableUpdate);
 
@@ -338,7 +338,7 @@ class ItemServiceImplTest {
 
         Item item1 = new Item(1L, "Дрель", "Электрическая дрель", true, owner, null);
         Item item2 = new Item(2L, "Отвертка", "Крестовая отвертка", true, owner, null);
-        
+
         List<Item> items = Arrays.asList(item1, item2);
         when(itemRepository.findByOwnerOrderById(owner)).thenReturn(items);
 
@@ -380,10 +380,10 @@ class ItemServiceImplTest {
         // Подготовка
         Item item1 = new Item(1L, "Дрель", "Электрическая дрель", true, owner, null);
         Item item2 = new Item(2L, "Перфоратор", "Мощный перфоратор", true, owner, null);
-        
+
         // Мокируем поиск по названию
         when(itemRepository.search("дрель")).thenReturn(List.of(item1));
-        
+
         // Действие - поиск по названию
         List<Item> searchResults1 = itemService.searchItems("дрель");
 
@@ -393,7 +393,7 @@ class ItemServiceImplTest {
 
         // Мокируем поиск по описанию
         when(itemRepository.search("мощный")).thenReturn(List.of(item2));
-        
+
         // Действие - поиск по описанию
         List<Item> searchResults2 = itemService.searchItems("мощный");
 
@@ -403,7 +403,7 @@ class ItemServiceImplTest {
 
         // Мокируем поиск недоступной вещи
         when(itemRepository.search("отвертка")).thenReturn(List.of());
-        
+
         // Действие - поиск недоступной вещи
         List<Item> searchResults3 = itemService.searchItems("отвертка");
 
@@ -429,7 +429,7 @@ class ItemServiceImplTest {
         // Проверка
         assertTrue(searchResults.isEmpty());
     }
-    
+
     /**
      * Тест на создание комментария с корректными данными.
      * Проверяет, что комментарий успешно создается и возвращается DTO.
@@ -440,17 +440,17 @@ class ItemServiceImplTest {
         CommentDto commentDto = new CommentDto(null, "Отличная дрель, спасибо!", null, null);
         Comment comment = new Comment(null, "Отличная дрель, спасибо!", item, booker, now);
         Comment savedComment = new Comment(1L, "Отличная дрель, спасибо!", item, booker, now);
-        
+
         when(userService.getUserById(booker.getId())).thenReturn(booker);
         when(itemRepository.findById(item.getId())).thenReturn(java.util.Optional.of(item));
         when(bookingRepository.existsByItemAndBookerAndEndBeforeAndStatus(
                 eq(item), eq(booker), any(LocalDateTime.class), eq(BookingStatus.APPROVED)))
                 .thenReturn(true);
         when(commentRepository.save(any(Comment.class))).thenReturn(savedComment);
-        
+
         // Действие
         CommentDto result = itemService.createComment(booker.getId(), item.getId(), commentDto);
-        
+
         // Проверка
         assertNotNull(result);
         assertEquals(savedComment.getId(), result.getId());
@@ -458,7 +458,7 @@ class ItemServiceImplTest {
         assertEquals(booker.getName(), result.getAuthorName());
         assertNotNull(result.getCreated());
     }
-    
+
     /**
      * Тест на создание комментария пользователем, который не бронировал вещь.
      * Проверяет, что выбрасывается исключение ValidationException.
@@ -467,22 +467,22 @@ class ItemServiceImplTest {
     void createComment_ByUserWhoHasNotBookedItem_ShouldThrowValidationException() {
         // Подготовка
         CommentDto commentDto = new CommentDto(null, "Отличная дрель, спасибо!", null, null);
-        
+
         when(userService.getUserById(booker.getId())).thenReturn(booker);
         when(itemRepository.findById(item.getId())).thenReturn(java.util.Optional.of(item));
         when(bookingRepository.existsByItemAndBookerAndEndBeforeAndStatus(
                 eq(item), eq(booker), any(LocalDateTime.class), eq(BookingStatus.APPROVED)))
                 .thenReturn(false);
-        
+
         // Действие и проверка
-        ValidationException exception = assertThrows(ValidationException.class, () -> 
+        ValidationException exception = assertThrows(ValidationException.class, () ->
             itemService.createComment(booker.getId(), item.getId(), commentDto)
         );
-        
+
         // Проверка сообщения об ошибке
         assertTrue(exception.getMessage().contains("не может оставить комментарий"));
     }
-    
+
     /**
      * Тест на получение комментариев к вещи.
      * Проверяет, что возвращается список комментариев.
@@ -493,13 +493,13 @@ class ItemServiceImplTest {
         Comment comment1 = new Comment(1L, "Отличная дрель!", item, booker, now.minusDays(2));
         Comment comment2 = new Comment(2L, "Работает хорошо", item, booker, now.minusDays(1));
         List<Comment> comments = Arrays.asList(comment1, comment2);
-        
+
         when(itemRepository.findById(item.getId())).thenReturn(java.util.Optional.of(item));
         when(commentRepository.findByItemOrderByCreatedDesc(item)).thenReturn(comments);
-        
+
         // Действие
         List<CommentDto> result = itemService.getItemComments(item.getId());
-        
+
         // Проверка
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -510,7 +510,7 @@ class ItemServiceImplTest {
         assertEquals(comment2.getText(), result.get(1).getText());
         assertEquals(booker.getName(), result.get(1).getAuthorName());
     }
-    
+
     /**
      * Тест на получение вещи с информацией о бронированиях и комментариях для владельца.
      * Проверяет, что возвращается DTO с информацией о бронированиях и комментариях.
@@ -520,39 +520,39 @@ class ItemServiceImplTest {
         // Подготовка
         Comment comment = new Comment(1L, "Отличная дрель!", item, booker, now.minusDays(1));
         List<Comment> comments = Arrays.asList(comment);
-        
+
         Booking lastBooking = new Booking(1L, now.minusDays(2), now.minusDays(1), item, booker, BookingStatus.APPROVED);
         Booking nextBooking = new Booking(2L, now.plusDays(1), now.plusDays(2), item, booker, BookingStatus.APPROVED);
-        
+
         when(itemRepository.findById(item.getId())).thenReturn(java.util.Optional.of(item));
         when(commentRepository.findByItemOrderByCreatedDesc(item)).thenReturn(comments);
         when(bookingRepository.findFirstByItemAndEndBeforeOrderByEndDesc(eq(item), any(LocalDateTime.class)))
                 .thenReturn(lastBooking);
         when(bookingRepository.findFirstByItemAndStartAfterOrderByStartAsc(eq(item), any(LocalDateTime.class)))
                 .thenReturn(nextBooking);
-        
+
         // Действие
         ItemDto result = itemService.getItemWithBookingsAndComments(item.getId(), owner.getId());
-        
+
         // Проверка
         assertNotNull(result);
         assertEquals(item.getId(), result.getId());
         assertEquals(item.getName(), result.getName());
         assertEquals(item.getDescription(), result.getDescription());
         assertEquals(item.getAvailable(), result.getAvailable());
-        
+
         assertNotNull(result.getComments());
         assertEquals(1, result.getComments().size());
         assertEquals(comment.getId(), result.getComments().get(0).getId());
         assertEquals(comment.getText(), result.getComments().get(0).getText());
-        
+
         assertNotNull(result.getLastBooking());
         assertEquals(lastBooking.getId(), result.getLastBooking().getId());
-        
+
         assertNotNull(result.getNextBooking());
         assertEquals(nextBooking.getId(), result.getNextBooking().getId());
     }
-    
+
     /**
      * Тест на получение вещи с информацией о бронированиях и комментариях для не владельца.
      * Проверяет, что возвращается DTO с комментариями, но без информации о бронированиях.
@@ -562,25 +562,25 @@ class ItemServiceImplTest {
         // Подготовка
         Comment comment = new Comment(1L, "Отличная дрель!", item, booker, now.minusDays(1));
         List<Comment> comments = Arrays.asList(comment);
-        
+
         when(itemRepository.findById(item.getId())).thenReturn(java.util.Optional.of(item));
         when(commentRepository.findByItemOrderByCreatedDesc(item)).thenReturn(comments);
-        
+
         // Действие
         ItemDto result = itemService.getItemWithBookingsAndComments(item.getId(), booker.getId());
-        
+
         // Проверка
         assertNotNull(result);
         assertEquals(item.getId(), result.getId());
         assertEquals(item.getName(), result.getName());
         assertEquals(item.getDescription(), result.getDescription());
         assertEquals(item.getAvailable(), result.getAvailable());
-        
+
         assertNotNull(result.getComments());
         assertEquals(1, result.getComments().size());
         assertEquals(comment.getId(), result.getComments().get(0).getId());
         assertEquals(comment.getText(), result.getComments().get(0).getText());
-        
+
         assertNull(result.getLastBooking());
         assertNull(result.getNextBooking());
     }

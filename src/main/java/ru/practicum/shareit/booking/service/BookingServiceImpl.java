@@ -48,7 +48,7 @@ public class BookingServiceImpl implements BookingService {
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец вещи не может бронировать свою вещь");
         }
-        
+
         // Установка полной информации о вещи
         booking.setItem(item);
 

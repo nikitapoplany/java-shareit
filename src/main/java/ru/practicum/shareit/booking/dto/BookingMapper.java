@@ -20,11 +20,11 @@ public class BookingMapper {
         booking.setId(bookingDto.getId());
         booking.setStart(bookingDto.getStart());
         booking.setEnd(bookingDto.getEnd());
-        
+
         Item item = new Item();
         item.setId(bookingDto.getItemId());
         booking.setItem(item);
-        
+
         return booking;
     }
 

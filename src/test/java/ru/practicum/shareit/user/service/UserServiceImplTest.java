@@ -43,7 +43,7 @@ class UserServiceImplTest {
         // Подготовка
         User user = new User(null, "Иван Иванов", "ivan@example.com");
         User savedUser = new User(1L, "Иван Иванов", "ivan@example.com");
-        
+
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         // Действие
@@ -102,7 +102,7 @@ class UserServiceImplTest {
     void createUser_WithDuplicateEmail_ShouldThrowConflictException() {
         // Подготовка
         User user = new User(null, "Петр Петров", "ivan@example.com");
-        
+
         // Мокируем выброс исключения при попытке сохранить пользователя с дублирующимся email
         when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("Duplicate email"));
 
@@ -127,10 +127,10 @@ class UserServiceImplTest {
         User existingUser = new User(userId, "Иван Иванов", "ivan@example.com");
         User updatedUserData = new User(null, "Иван Сидоров", "ivan.sidorov@example.com");
         User updatedUser = new User(userId, "Иван Сидоров", "ivan.sidorov@example.com");
-        
+
         // Мокируем поиск пользователя по ID
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        
+
         // Мокируем сохранение обновленного пользователя
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
 
@@ -154,10 +154,10 @@ class UserServiceImplTest {
         User existingUser = new User(userId, "Иван Иванов", "ivan@example.com");
         User afterNameUpdate = new User(userId, "Иван Сидоров", "ivan@example.com");
         User afterEmailUpdate = new User(userId, "Иван Сидоров", "ivan.sidorov@example.com");
-        
+
         // Мокируем поиск пользователя по ID для первого обновления
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        
+
         // Мокируем сохранение после обновления имени
         when(userRepository.save(any(User.class))).thenReturn(afterNameUpdate, afterEmailUpdate);
 
@@ -212,7 +212,7 @@ class UserServiceImplTest {
         Long userId = 1L;
         User existingUser = new User(userId, "Иван Иванов", "ivan@example.com");
         User updatedUserData = new User(null, null, "invalid-email");
-        
+
         // Мокируем поиск пользователя по ID
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
@@ -236,10 +236,10 @@ class UserServiceImplTest {
         Long userId = 2L;
         User existingUser = new User(userId, "Петр Петров", "petr@example.com");
         User updatedUserData = new User(null, null, "ivan@example.com");
-        
+
         // Мокируем поиск пользователя по ID
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        
+
         // Мокируем выброс исключения при попытке сохранить пользователя с дублирующимся email
         when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("Duplicate email"));
 
@@ -262,7 +262,7 @@ class UserServiceImplTest {
         // Подготовка
         Long userId = 1L;
         User user = new User(userId, "Иван Иванов", "ivan@example.com");
-        
+
         // Мокируем поиск пользователя по ID
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -301,7 +301,7 @@ class UserServiceImplTest {
         User user1 = new User(1L, "Иван Иванов", "ivan@example.com");
         User user2 = new User(2L, "Петр Петров", "petr@example.com");
         List<User> userList = Arrays.asList(user1, user2);
-        
+
         // Мокируем получение всех пользователей
         when(userRepository.findAll()).thenReturn(userList);
 
@@ -323,13 +323,13 @@ class UserServiceImplTest {
         // Подготовка
         Long userId = 1L;
         User user = new User(userId, "Иван Иванов", "ivan@example.com");
-        
+
         // Мокируем поиск пользователя по ID перед удалением
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        
+
         // Действие
         userService.deleteUser(userId);
-        
+
         // Мокируем поиск пользователя по ID после удаления
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 

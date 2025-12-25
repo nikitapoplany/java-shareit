@@ -119,75 +119,75 @@ public class ItemServiceImpl implements ItemService {
 
         return itemRepository.search(text);
     }
-    
+
     @Override
     @Transactional
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
         // Проверка существования пользователя
         User author = userService.getUserById(userId);
-        
+
         // Проверка существования вещи
         Item item = getItemById(itemId);
-        
+
         // Проверка, что пользователь брал вещь в аренду и аренда завершена
         LocalDateTime now = LocalDateTime.now();
         boolean hasBooking = bookingRepository.existsByItemAndBookerAndEndBeforeAndStatus(
                 item, author, now, BookingStatus.APPROVED);
-        
+
         if (!hasBooking) {
-            throw new ValidationException("Пользователь с ID " + userId + 
-                    " не может оставить комментарий к вещи с ID " + itemId + 
+            throw new ValidationException("Пользователь с ID " + userId +
+                    " не может оставить комментарий к вещи с ID " + itemId +
                     ", так как не брал её в аренду или аренда не завершена");
         }
-        
+
         // Создание и сохранение комментария
         Comment comment = CommentMapper.toComment(commentDto, item, author);
         comment.setCreated(now);
-        
+
         Comment savedComment = commentRepository.save(comment);
         return CommentMapper.toCommentDto(savedComment);
     }
-    
+
     @Override
     public List<CommentDto> getItemComments(Long itemId) {
         // Проверка существования вещи
         Item item = getItemById(itemId);
-        
+
         return commentRepository.findByItemOrderByCreatedDesc(item).stream()
                 .map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public ItemDto getItemWithBookingsAndComments(Long itemId, Long userId) {
         // Проверка существования вещи
         Item item = getItemById(itemId);
-        
+
         // Создаем DTO вещи
         ItemDto itemDto = ItemMapper.toItemDto(item);
-        
+
         // Получаем комментарии к вещи
         List<CommentDto> comments = getItemComments(itemId);
         itemDto.setComments(comments);
-        
+
         // Если пользователь не является владельцем вещи, не добавляем информацию о бронированиях
         if (!item.getOwner().getId().equals(userId)) {
             return itemDto;
         }
-        
+
         // Получаем последнее завершенное бронирование
         LocalDateTime now = LocalDateTime.now();
         Booking lastBooking = bookingRepository.findFirstByItemAndEndBeforeOrderByEndDesc(item, now);
         if (lastBooking != null) {
             itemDto.setLastBooking(BookingMapper.toBookingDtoShort(lastBooking));
         }
-        
+
         // Получаем ближайшее будущее бронирование
         Booking nextBooking = bookingRepository.findFirstByItemAndStartAfterOrderByStartAsc(item, now);
         if (nextBooking != null) {
             itemDto.setNextBooking(BookingMapper.toBookingDtoShort(nextBooking));
         }
-        
+
         return itemDto;
     }
 }
