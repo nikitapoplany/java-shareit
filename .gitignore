@@ -34,3 +34,4 @@ build/
 
 postman/
 db/
+.DS_Store
