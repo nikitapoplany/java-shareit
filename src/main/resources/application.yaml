@@ -1,5 +1,6 @@
 logging.level:
   org.zalando.logbook: INFO
+  ru.practicum.shareit: INFO
 
 spring:
   output:
