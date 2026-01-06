@@ -19,7 +19,7 @@ public class ItemMapper {
      * @return объект DTO вещи
      */
     public static ItemDto toItemDto(Item item) {
-        return new ItemDto(
+        ItemDto itemDto = new ItemDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
@@ -27,6 +27,8 @@ public class ItemMapper {
                 item.getOwner() != null ? item.getOwner().getId() : null,
                 item.getRequest() != null ? item.getRequest().getId() : null
         );
+
+        return itemDto;
     }
 
     /**
