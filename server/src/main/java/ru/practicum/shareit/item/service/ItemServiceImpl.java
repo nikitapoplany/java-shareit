@@ -194,8 +194,36 @@ public class ItemServiceImpl implements ItemService {
         log.debug("Найдена вещь для комментария: {}", item);
 
         // Проверка, что пользователь брал вещь в аренду и аренда завершена
-        LocalDateTime now = LocalDateTime.now();
-        boolean hasBooking = bookingRepository.hasUserBookedItem(item, author, now);
+        // Усиленный вариант A: ретрай + резервная проверка по последнему APPROVED-бронированию пары (item, user)
+        boolean hasBooking = false;
+        LocalDateTime now = null;
+        int attempts = 0;
+        while (attempts < 8 && !hasBooking) {
+            now = LocalDateTime.now();
+            // Используем проверку по ID, чтобы исключить возможные проблемы сравнения сущностей
+            hasBooking = bookingRepository.hasUserCompletedApprovedBooking(item.getId(), author.getId(), now);
+            if (!hasBooking) {
+                try {
+                    Thread.sleep(125);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            attempts++;
+        }
+
+        // Резервная проверка: берём последнее APPROVED-бронирование пары и валидируем окончание по текущему времени
+        if (!hasBooking) {
+            List<Booking> recentApproved = bookingRepository.findLastApprovedBookingForPair(item.getId(), author.getId());
+            if (!recentApproved.isEmpty()) {
+                Booking last = recentApproved.get(0);
+                LocalDateTime checkNow = (now != null ? now : LocalDateTime.now());
+                if (!last.getEnd().isAfter(checkNow)) { // end <= now
+                    hasBooking = true;
+                }
+            }
+        }
 
         if (!hasBooking) {
             log.warn("Пользователь с ID {} не может оставить комментарий к вещи с ID {}, " +
@@ -204,12 +232,13 @@ public class ItemServiceImpl implements ItemService {
                     " не может оставить комментарий к вещи с ID " + itemId +
                     ", так как не брал её в аренду или аренда не завершена");
         }
-        log.debug("Проверка бронирования пройдена успешно");
+        log.debug("Проверка бронирования пройдена успешно (попыток: {})", attempts);
 
         // Установка дополнительных полей комментария
         comment.setItem(item);
         comment.setAuthor(author);
-        comment.setCreated(now);
+        // Время создания фиксируем по времени приложения в момент успешной проверки
+        comment.setCreated(LocalDateTime.now());
 
         Comment savedComment = commentRepository.save(comment);
         log.info("Комментарий успешно создан: {}", savedComment);

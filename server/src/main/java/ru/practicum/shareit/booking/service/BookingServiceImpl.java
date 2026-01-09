@@ -254,6 +254,7 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Дата окончания бронирования не может быть пустой");
         }
 
+        // Начало не может быть в прошлом относительно текущего времени приложения
         if (booking.getStart().isBefore(now)) {
             log.warn("Попытка создания бронирования с датой начала в прошлом: {}", booking.getStart());
             throw new ValidationException("Дата начала бронирования не может быть в прошлом");

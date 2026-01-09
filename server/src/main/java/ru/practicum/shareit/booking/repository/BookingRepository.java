@@ -165,10 +165,27 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      * @param now    текущее время
      * @return true, если пользователь бронировал вещь и бронирование завершено
      */
-    @Query("select count(b) > 0 from Booking b " +
+    @Query("select exists (select 1 from Booking b " +
             "where b.item = ?1 " +
             "and b.booker = ?2 " +
-            "and b.end < ?3 " +
-            "and b.status = 'APPROVED'")
+            "and b.end <= ?3 " +
+            "and b.status = 'APPROVED')")
     boolean hasUserBookedItem(Item item, User booker, LocalDateTime now);
+
+    /**
+     * Проверка завершенного APPROVED-бронирования по идентификаторам.
+     * Использует сравнение по ID, что исключает любые неоднозначности сравнения сущностей.
+     */
+    @Query("select (count(b) > 0) from Booking b " +
+            "where b.item.id = ?1 " +
+            "and b.booker.id = ?2 " +
+            "and b.end <= ?3 " +
+            "and b.status = 'APPROVED'")
+    boolean hasUserCompletedApprovedBooking(Long itemId, Long bookerId, LocalDateTime now);
+
+    /**
+     * Последняя APPROVED-бронирование для пары (item, booker) по убыванию end.
+     */
+    @Query("select b from Booking b where b.item.id = ?1 and b.booker.id = ?2 and b.status = 'APPROVED' order by b.end desc")
+    List<Booking> findLastApprovedBookingForPair(Long itemId, Long bookerId);
 }
